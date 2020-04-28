@@ -20,7 +20,7 @@ public class Calender {
 		System.out.println("22	23	24	25	26	27	28");
 		System.out.println("29	30	31");
 
-		// 숫자를 입력받아 해당하는 달의 최대일수를 출력하는 방법
+		// 숫자를 입력 받아 해당하는 달의 최대일수를 출력하는 방법
 		Scanner scanner = new Scanner(System.in);
 		Calender cal = new Calender();
 		System.out.println("달을 입력하세요");
@@ -28,5 +28,7 @@ public class Calender {
 
 		System.out.printf("%d월의 최대일수는 %d일 입니다.\n", month, cal.getMaxDaysOfMonth(month));
 		scanner.close();
+		
+		
 	}
 }
