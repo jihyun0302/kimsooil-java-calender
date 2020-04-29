@@ -1,76 +1,150 @@
 package honux.Calender;
 
-import java.util.Calendar;
+
+import java.util.Scanner;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class Calender {
-
-	private static final int[] maxDays1 = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-
-	public int getMaxDaysOfMonth(int month) {
-		return maxDays1[month - 1];
-	}
-
-	public static void main(String[] args) {
-		System.out.println("Calender");
-		System.out.println("일	월	화	수	목	금	토");
-		System.out.println("--------------------------------------------------");
-		System.out.println("1	2	3	4	5	6	7");
-		System.out.println("8	9	10	11	12	13	14");
-		System.out.println("15	16	17	18	19	20	21");
-		System.out.println("22	23	24	25	26	27	28");
-		System.out.println("29	30	31");
-
-		// 숫자를 입력 받아 해당하는 달의 최대일수를 출력하는 방법
-		Scanner scanner = new Scanner(System.in);
-		Calender cal = new Calender();
-		System.out.println("달을 입력하세요");
-		int month = scanner.nextInt();
-
-		System.out.printf("%d월의 최대일수는 %d일 입니다.\n", month, cal.getMaxDaysOfMonth(month));
-		
-		int y,m;
-		System.out.println("몇년도 달력을 희망하시나요?");
-		y=scanner.nextInt();
-		
-		//요일 확인 일요일 =1,월요일2,화3수4목5
-		for(int j=1;j<=12;j++) {
-			cal.set(y,j-1,1);
-			int w=cal.get(Calendar.DAY_OF_WEEK);
-			int end = cal.getActualMaximum(Calendar.DATE);
-			
-			System.out.println("\t"+y+"년"+j+"월");
-			
-			for (int i=1;i<w;i++) {
-				System.out.print("\t");
+	private final int[] MAX_DAYS = {0, 31, 28, 31, 30, 31, 30, 31, 30, 31, 30, 31 };
+	private final int[] LEAP_MAX_DAYS = {0, 31, 29, 31, 30, 31, 30, 31, 30, 31, 30, 31 };
+	private static final String SAVE_FILE="calender.dat";
+	
+	private HashMap <Date, PlanItem> planMap; 
+	
+	public Calender() {
+		planMap = new HashMap<Date, PlanItem>();
+		File f= new File(SAVE_FILE);
+		if(!f.exists()) {
+			return;
+		}
+		try {
+			Scanner s = new Scanner(f);
+			while(s.hasNext()) {
+				String line = s.nextLine();
+				String[] words = line.split(",");
+				String date = words[0];
+				String detail = words[1].replaceAll("\"", "");
+				PlanItem p = new PlanItem(date, detail);
+				planMap.put(p.getDate(), p);
 			}
-			for(int i = 1;i<=end;i++) {
-				System.out.print("\t"+i);
-				if(++w%7==1)
-					System.out.println();
-			}
-			System.out.println();
+			s.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
-
+	}
+	
+	/**
+	 * 
+	 * @param date ex " 2017 - 06- 28"
+	 * @param plan
+	 * @throws ParseException 
+	 */
+	public void resisterPlan(String strDate, String plan) {
 		
-		scanner.close();
-		
+		PlanItem p = new PlanItem(strDate, plan);
+		//System.out.println(date);
+		planMap.put(p.getDate(), p);
+		File f= new File(SAVE_FILE);
+		String item = p.saveString();
+		try {
+			FileWriter fw = new FileWriter(f,true);
+			fw.write(item);
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
-
-	private int getActualMaximum(int date) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	private int get(int dayOfWeek) {
-		// TODO Auto-generated method stub
-		return 0;
-	}
-
-	private void set(int y, int i, int j) {
-		// TODO Auto-generated method stub
+	public PlanItem searchPlan(String strDate)  {
+		Date date = PlanItem.getDatefromSting(strDate);
+		return planMap.get(date);
 		
 	}
+	public boolean isLeapYear(int year) {
+		if(year%4==0 && (year%100!=0 || year%400 ==0)) {
+			return true;
+		}
+		return false;
+	}
+	
+	public int getMaxDaysOfMonth(int year ,int month) {
+		if(isLeapYear(year)) {
+			return LEAP_MAX_DAYS[month];
+		}
+		return MAX_DAYS[month];
+	}
+
+	public void printSample(int year ,int month) {
+
+		System.out.printf("  <<%4d�� %3d��>>\n", year,month);
+		System.out.println(" ��   ��   ȭ   ��   ��   ��   �� ");
+		System.out.println("--------------------");
+		
+		//weekday auto
+		int weekDay = getWeekday(year,month,1);
+		for(int i= 0; i<weekDay; i++) {
+			System.out.print("   ");
+		}
+		
+		//print first line
+		int maxDay = getMaxDaysOfMonth(year, month);
+		int count =7 - weekDay;
+		int delin = (count<7) ? count : 0;
+		
+		
+		for(int i=1; i<=count; i++) {
+			System.out.printf("%3d",i);
+		}
+		System.out.println();
+		
+		
+		//print from second line to last
+		count++;
+		for(int i=count ; i<=maxDay; i++) {
+			System.out.printf("%3d",i);
+			if(i%7==delin) {
+				System.out.println();
+			}
+		}
+		System.out.println();
+//		System.out.println(" 1  2  3  4  5  6  7");
+//		System.out.println(" 8  9 10 11 12 13 14");
+//		System.out.println("15 16 17 18 19 20 21");
+//		System.out.println("22 23 24 25 26 27 28");
+	}
+
+	public int getWeekday(int year, int month, int day) {
+		int syear =1970;
+		
+		final int SWEEKDAY=3; // 1970 , Jan, 1st =Thursday
+		
+		int count = 0;
+		for(int i =syear; i<=year; i++) {
+			int delta= isLeapYear(i)? 366 : 365;
+			count +=delta;
+		}
+		//count
+		for(int i =1;i<month; i++) {
+			int delta = getMaxDaysOfMonth(year, i);
+			count +=delta;
+		}
+		count += day;
+		
+		int weekday = (count+SWEEKDAY) %7;
+		return weekday;
+	}
+
+	
+
 }
